@@ -31,7 +31,7 @@ export class Server {
 
       httpServer.listen(port, () => {
         this.logger.info(
-          `Server ready at http://localhost:${port}${server.graphqlPath}`
+          `Boldrei ready at http://localhost:${port}${server.graphqlPath}`
         );
         this.logger.info(
           `Subscriptions ready at ws://localhost:${port}${server.subscriptionsPath}`
