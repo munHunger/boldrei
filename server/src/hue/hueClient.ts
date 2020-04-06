@@ -15,8 +15,14 @@ export class HueClient {
   static singleton: HueClient;
   isLoaded = false;
   config: HueConfig;
+  url: string;
 
-  whenReady(): Promise<HueClient> {
+  constructor() {
+    this.url = "not yet loaded";
+    logger.debug("constructing client");
+  }
+
+  async whenReady(): Promise<HueClient> {
     if (HueClient.singleton) return Promise.resolve(HueClient.singleton);
     return HueClient.createClient().then(client => {
       HueClient.singleton = client;
@@ -29,7 +35,9 @@ export class HueClient {
     return new Promise(resolve => {
       new UPNPClient().getHueBridge().then(addr => {
         logger.info("Found hue bridge", { data: addr });
-        resolve(new HueClient(addr));
+        let client = new HueClient();
+        client.url = addr;
+        resolve(client);
       });
     }).then((client: HueClient) => client.loadConfig());
   }
@@ -57,8 +65,6 @@ export class HueClient {
     });
   }
 
-  constructor(public url: string) {}
-
   createUser() {
     request(
       `http://${this.url}/api`,
@@ -77,51 +83,6 @@ export class HueClient {
             if (err) logger.error(err);
           }
         );
-      }
-    );
-  }
-
-  getGroups() {
-    request(
-      `http://${this.url}/api/${this.config.password}/groups`,
-      {
-        json: true
-      },
-      (err, _res, body) => {
-        if (err) logger.error(err);
-
-        body = Object.keys(body)
-          .map(key => body[key])
-          .filter(group => group.type === "Room");
-        logger.info("groups", { data: body });
-      }
-    );
-  }
-
-  getSensors() {
-    request(
-      `http://${this.url}/api/${this.config.password}/sensors`,
-      {
-        json: true
-      },
-      (err, _res, body) => {
-        if (err) logger.error(err);
-        let sensors = Object.keys(body)
-          .map(key => ({ ...body[key], id: key }))
-          .filter(
-            (val: { productname: string }) =>
-              val.productname === "Hue ambient light sensor" ||
-              val.productname === "Hue motion sensor"
-          );
-        let sensor = new Sensor();
-        sensor.ids = sensors.map(s => s.id);
-        sensor.state = sensors
-          .map(s => s.state)
-          .reverse()
-          .reduce((acc, val) => ({ ...acc, ...val }), {});
-        logger.info("filtered", {
-          data: sensor
-        });
       }
     );
   }

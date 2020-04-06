@@ -1,6 +1,7 @@
 import { HueClient } from "./hueClient";
 const logger = require("../logger").logger("Hue light");
 import request from "request";
+
 import {
   ObjectType,
   InputType,
