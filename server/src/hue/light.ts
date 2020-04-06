@@ -86,7 +86,7 @@ export class LightResolver {
                 bri: light.bri,
                 sat: light.sat,
                 hue: light.hue,
-                on: true
+                on: light.on
               }
             },
             (err, _res, _body) => {

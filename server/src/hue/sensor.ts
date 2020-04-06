@@ -49,13 +49,9 @@ export class SensorResolver {
         .then(sensorArray => {
           let diff: any = detailedDiff(this.lastState, sensorArray);
           if (Object.keys(diff.updated || {}).length > 0) {
-            logger.info("diff in state", {
-              data: detailedDiff(sensorArray, this.lastState)
-            });
-
             Container.get<PubSubEngine>("pubsub").publish(
               "SENSOR_CHANGE",
-              this.lastState
+              sensorArray
             );
           }
           return sensorArray;
@@ -100,9 +96,6 @@ export class SensorResolver {
                 .map(s => s.state)
                 .reverse()
                 .reduce((acc, val) => ({ ...acc, ...val }), {});
-              logger.debug("filtered", {
-                data: sensor
-              });
               resolve([sensor]);
             }
           );
