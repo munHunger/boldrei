@@ -16,7 +16,9 @@ export class Automation {
     let sensorResolver = Container.get(SensorResolver);
 
     const onSensor = (sensor: Sensor) => {
-      if (sensor.state.lightlevel < 3500) {
+      const currentHour = new Date().getHours();
+      const inSiletPeriod = currentHour > 21 || currentHour < 8;
+      if (sensor.state.lightlevel < 3500 && !inSiletPeriod) {
         let lights = [
           "0",
           "1",
@@ -66,7 +68,7 @@ export class Automation {
       "SENSOR_CHANGE",
       (sensor: Sensor[]) => {
         let state = sensor[0].state;
-        if (state.presence) {
+        if (state.presence && state.lightlevel < 4000) {
           if (timeoutFun) clearTimeout(timeoutFun);
           logger.info("Presence detected at desk, turning on light");
           lightResolver.setLight(new Light({ id: "12", on: true } as Light));

@@ -1,2 +1,5 @@
 node_modules
 bundle*
+
+server/build/*
+!server/build/boldrei

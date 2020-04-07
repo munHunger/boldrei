@@ -15,7 +15,7 @@ export class Server {
   startBackend(port: number) {
     const app = express();
 
-    app.use("", express.static("node_modules/boldrei-client/public"));
+    app.use("", express.static(__dirname + "/public"));
 
     schema.then(schema => {
       const server = new ApolloServer({

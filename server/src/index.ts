@@ -5,6 +5,7 @@ import Container from "typedi";
 import { SensorResolver } from "./hue/sensor";
 import { HueClient } from "./hue/hueClient";
 import { Automation } from "./automation/automation";
+import { LocalDevices } from "./devices/localDevices";
 
 new SelfUpdater();
 new Server().startBackend(5001);
@@ -14,4 +15,5 @@ HueClient.createClient()
   .then(() => {
     Container.get(SensorResolver);
   })
-  .then(() => new Automation());
+  .then(() => new Automation())
+  .then(() => new LocalDevices());

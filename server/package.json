@@ -2,11 +2,11 @@
   "name": "spider-queue",
   "version": "0.0.1",
   "description": "A small scale message buss",
-  "main": "index.js",
+  "bin": "build/index.js",
   "scripts": {
     "start": "node --inspect=5858 -r ts-node/register ./src/index.ts",
     "dev": "nodemon log_level=debug log_data",
-    "package": "npm run build && pkg build/index.js --output build/pos",
+    "package": "npm run build && cp -r node_modules/boldrei-client/public build/public && pkg ./ --output build/boldrei",
     "build": "tsc",
     "lint": "tslint -c tslint.json 'src/**/*.ts'"
   },
@@ -39,7 +39,9 @@
     "graphql": "^14.2.1",
     "graphql-subscriptions": "^1.1.0",
     "graphql-tools": "4.0.5",
-    "lodash": "^2.4.1",
+    "local-devices": "3.0.0",
+    "lodash": "^4.17.15",
+    "network-list": "1.1.5",
     "node-fetch": "2.6.0",
     "node-ssdp-lite": "^0.2.0",
     "node-upnp": "^1.2.0",
@@ -67,6 +69,11 @@
     "pkg": "4.4.4",
     "ts-node": "8.6.2",
     "tslint": "6.1.0"
+  },
+  "pkg": {
+    "assets": [
+      "build/public/*"
+    ]
   },
   "nodemonConfig": {
     "ignore": [
