@@ -5,8 +5,8 @@ import { WebSocketLink } from "apollo-link-ws";
 import { get } from "svelte/store";
 import { rooms, activeRoom } from "./data";
 
-const wsClient = new SubscriptionClient("ws://localhost:5001/graphql", {
-  reconnect: true
+const wsClient = new SubscriptionClient("ws://192.168.0.178:5001/graphql", {
+  reconnect: true,
 });
 
 const client = new WebSocketLink(wsClient);
@@ -24,9 +24,9 @@ function fetchRooms() {
           }
         }
       `,
-      variables: {}
+      variables: {},
     })
-    .subscribe(res => {
+    .subscribe((res) => {
       rooms.set(res.data.getRooms);
       activeRoom.set(res.data.getRooms.slice(-2)[0]);
     });
@@ -46,10 +46,10 @@ export function fetchLights(lights) {
           }
         }
       `,
-      variables: { lights }
+      variables: { lights },
     })
-    .subscribe(res =>
-      activeRoom.update(n => {
+    .subscribe((res) =>
+      activeRoom.update((n) => {
         n.lights = res.data.getLights;
         return n;
       })
@@ -64,10 +64,10 @@ export function toggleLight(id) {
           toggleLight(id: $id)
         }
       `,
-      variables: { id }
+      variables: { id },
     })
     .subscribe(() => {
-      fetchLights(get(activeRoom).lights.map(light => light.id));
+      fetchLights(get(activeRoom).lights.map((light) => light.id));
     });
 }
 
@@ -79,11 +79,11 @@ export function setLight(light, skipRefresh) {
           setLight(light: $light)
         }
       `,
-      variables: { light }
+      variables: { light },
     })
     .subscribe(() => {
       if (!skipRefresh)
-        fetchLights(get(activeRoom).lights.map(light => light.id));
+        fetchLights(get(activeRoom).lights.map((light) => light.id));
     });
 }
 fetchRooms();

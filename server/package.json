@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node --inspect=5858 -r ts-node/register ./src/index.ts",
     "dev": "nodemon log_level=debug log_data",
-    "package": "npm run build && cp -r node_modules/boldrei-client/public build/public && pkg ./ --output build/boldrei",
+    "package": "npm run build && cp -r node_modules/boldrei-client/public build/public && pkg ./ --output build/boldrei -d",
     "build": "tsc",
     "lint": "tslint -c tslint.json 'src/**/*.ts'"
   },
@@ -31,7 +31,7 @@
     "chalk": "3.0.0",
     "cors": "2.8.5",
     "cron": "1.8.2",
-    "datason": "1.0.5",
+    "datason": "^2.0.0",
     "dateformat": "3.0.3",
     "deep-object-diff": "^1.1.0",
     "express": "4.17.1",
@@ -71,8 +71,15 @@
     "tslint": "6.1.0"
   },
   "pkg": {
+    "source": [
+      "build/*"
+    ],
     "assets": [
       "build/public/*"
+    ],
+    "targets": [
+      "node12",
+      "node12.2.0-linux-armv7"
     ]
   },
   "nodemonConfig": {

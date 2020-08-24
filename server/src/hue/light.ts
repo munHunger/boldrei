@@ -8,9 +8,11 @@ import {
   Query,
   Field,
   Mutation,
-  Arg
+  Arg,
 } from "type-graphql";
 import { Service } from "typedi";
+import { schedule } from "../schedule/schedule";
+import { db } from "../datastore";
 
 @ObjectType()
 @InputType("LightInput")
@@ -38,80 +40,95 @@ export class Light {
 
 @Service()
 export class LightResolver {
-  constructor(private readonly client: HueClient) {}
+  constructor(private readonly client: HueClient) {
+    schedule("*/20 * * * * *", () => {
+      this.getLights(null).then((lights) => {
+        if (!db.get("lights")) {
+          db.createTable("lights", { index: "TIME" });
+        }
+        db.get("lights").register(new Date().getTime(), lights);
+      });
+    });
+  }
 
   @Mutation(() => String)
   async toggleLight(@Arg("id") lightId: string) {
     logger.info(`toggling light ${lightId}`);
 
-    return this.client.whenReady().then(
-      client =>
-        new Promise((resolve, reject) => {
-          this.getLight(lightId).then(light => {
+    return this.client
+      .whenReady()
+      .then(
+        (client) =>
+          new Promise((resolve, reject) => {
+            this.getLight(lightId).then((light) => {
+              request(
+                `http://${client.url}/api/${client.config.password}/lights/${light.id}/state`,
+                {
+                  json: true,
+                  method: "PUT",
+                  body: {
+                    on: !light.on,
+                  },
+                },
+                (err, _res, body) => {
+                  if (err) {
+                    logger.error(err);
+                    reject(err);
+                  }
+                  logger.info("toggled", { data: body });
+                  resolve("OK");
+                }
+              );
+            });
+          })
+      )
+      .catch((err) => logger.error(err));
+  }
+
+  @Mutation(() => String)
+  async setLight(@Arg("light") light: Light) {
+    logger.info("setting light", { data: light });
+    return this.client
+      .whenReady()
+      .then(
+        (client) =>
+          new Promise((resolve, reject) => {
             request(
               `http://${client.url}/api/${client.config.password}/lights/${light.id}/state`,
               {
                 json: true,
                 method: "PUT",
                 body: {
-                  on: !light.on
-                }
+                  bri: light.bri,
+                  sat: light.sat,
+                  hue: light.hue,
+                  on: light.on,
+                },
               },
-              (err, _res, body) => {
+              (err, _res, _body) => {
                 if (err) {
                   logger.error(err);
                   reject(err);
                 }
-                logger.info("toggled", { data: body });
+                logger.debug("response", { data: _body });
                 resolve("OK");
               }
             );
-          });
-        })
-    );
-  }
-
-  @Mutation(() => String)
-  async setLight(@Arg("light") light: Light) {
-    logger.info("setting light", { data: light });
-    return this.client.whenReady().then(
-      client =>
-        new Promise((resolve, reject) => {
-          request(
-            `http://${client.url}/api/${client.config.password}/lights/${light.id}/state`,
-            {
-              json: true,
-              method: "PUT",
-              body: {
-                bri: light.bri,
-                sat: light.sat,
-                hue: light.hue,
-                on: light.on
-              }
-            },
-            (err, _res, _body) => {
-              if (err) {
-                logger.error(err);
-                reject(err);
-              }
-              logger.debug("response", { data: _body });
-              resolve("OK");
-            }
-          );
-        })
-    );
+          })
+      )
+      .catch((err) => logger.error(err));
   }
 
   @Query(() => [Light])
   async getLights(
     @Arg("ids", () => [String], { nullable: true }) ids: string[]
   ): Promise<Light[]> {
-    return this.client.whenReady().then(client => {
+    return this.client.whenReady().then((client) => {
       return new Promise((resolve, reject) => {
         request(
           `http://${client.url}/api/${client.config.password}/lights`,
           {
-            json: true
+            json: true,
           },
           (err, _res, body) => {
             if (err) {
@@ -120,10 +137,10 @@ export class LightResolver {
             }
 
             let lights = Object.keys(body)
-              .map(key => ({ ...body[key], id: key }))
-              .map(light => this.toLight(light));
+              .map((key) => ({ ...body[key], id: key }))
+              .map((light) => this.toLight(light));
             if (ids != null) {
-              resolve(lights.filter(light => ids.includes(light.id)));
+              resolve(lights.filter((light) => ids.includes(light.id)));
             }
             resolve(lights);
           }
@@ -134,12 +151,12 @@ export class LightResolver {
 
   @Query(() => Light)
   async getLight(@Arg("id") lightId: string): Promise<Light> {
-    return this.client.whenReady().then(client => {
+    return this.client.whenReady().then((client) => {
       return new Promise((resolve, reject) => {
         request(
           `http://${client.url}/api/${client.config.password}/lights/${lightId}`,
           {
-            json: true
+            json: true,
           },
           (err, _res, body) => {
             if (err) {
@@ -167,7 +184,7 @@ export class LightResolver {
       on: raw.state.on,
       bri: raw.state.bri,
       hue: raw.state.hue,
-      sat: raw.state.sat
+      sat: raw.state.sat,
     } as Light);
   }
 }
