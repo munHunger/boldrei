@@ -47,7 +47,7 @@
     "node-upnp": "^1.2.0",
     "reflect-metadata": "0.1.13",
     "request": "^2.53.0",
-    "simple-git": "^1.120.0",
+    "simple-git": "^3.3.0",
     "subscriptions-transport-ws": "^0.9.16",
     "type-graphql": "0.17.6",
     "typedi": "0.8.0",
